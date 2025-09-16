@@ -1,7 +1,5 @@
 package org.example.todo.service;
 
-import org.example.todo.dto.TodoResponse;
-import org.example.todo.dto.mapper.TodoMapper;
 import org.example.todo.entity.Todo;
 import org.example.todo.exception.TodoNotFoundException;
 import org.example.todo.repository.TodoRepository;
@@ -18,9 +16,10 @@ public class TodoService {
         this.todoRepository = todoRepository;
     }
 
-    public Todo createTodo(Todo todo) {
+    public List<Todo> createTodo(Todo todo) {
         todo.setId(null);
-        return todoRepository.save(todo);
+        todoRepository.save(todo);
+        return index();
     }
 
     public List<Todo> index() {
@@ -28,9 +27,21 @@ public class TodoService {
     }
 
     public void updateTodo(String id, Todo updatedTodo) {
-        Todo existingTodo = todoRepository.findById(Integer.parseInt(id)).orElseThrow(() -> new TodoNotFoundException("Todo not found with id: " + id));
+        Todo existingTodo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException("Todo not found with id: " + id));
         existingTodo.setText(updatedTodo.getText());
         existingTodo.setDone(updatedTodo.isDone());
         todoRepository.save(existingTodo);
+    }
+
+
+    public Todo getTodoById(String id) {
+        return todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException("Todo not found with id: " + id));
+    }
+
+    public void deleteTodoById(String id) {
+        if (!todoRepository.existsById(id)) {
+            throw new TodoNotFoundException("Todo not found with id: " + id);
+        }
+        todoRepository.deleteById(id);
     }
 }
