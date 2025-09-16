@@ -20,7 +20,7 @@ public class TodoController {
     }
 
     @GetMapping
-    List<Todo> index(){
+    List<Todo> index() {
         return todoRepository.findAll();
     }
 
