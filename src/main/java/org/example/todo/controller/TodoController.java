@@ -1,11 +1,14 @@
 package org.example.todo.controller;
 
 
+import jakarta.validation.Valid;
+import org.example.todo.dto.TodoRequest;
+import org.example.todo.dto.TodoResponse;
+import org.example.todo.dto.mapper.TodoMapper;
 import org.example.todo.entity.Todo;
-import org.example.todo.repository.TodoRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.example.todo.service.TodoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -13,16 +16,32 @@ import java.util.List;
 @RequestMapping("/todos")
 public class TodoController {
 
-    private final TodoRepository todoRepository;
+    private final TodoService todoService;
 
-    public TodoController(TodoRepository todoRepository) {
-        this.todoRepository = todoRepository;
+    public TodoController(TodoService todoService) {
+        this.todoService = todoService;
     }
 
     @GetMapping
     List<Todo> index() {
-        return todoRepository.findAll();
+        return todoService.index();
     }
 
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    List<Todo> create(@Valid @RequestBody TodoRequest todoRequest) {
+        Todo todo = TodoMapper.toTodo(todoRequest);
+        Todo createdTodo = todoService.createTodo(todo);
+        return todoService.index();
+    }
+
+
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public TodoResponse updateTodo(@PathVariable int id, @Valid @RequestBody TodoRequest todoRequest) {
+        Todo updatedTodo = TodoMapper.toTodo(todoRequest);
+        todoService.updateTodo(id, updatedTodo);
+        return null;
+    }
 
 }
