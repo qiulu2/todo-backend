@@ -18,4 +18,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public void handleIllegalArgumentException(IllegalArgumentException ex) {
     }
+
+    @ExceptionHandler(TodoNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public void handleTodoNotFoundException(TodoNotFoundException ex) {
+    }
 }

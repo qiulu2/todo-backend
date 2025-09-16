@@ -43,7 +43,7 @@ public class TodoControllerTest {
 
     @Test
     void should_response_empty_list_when_index_with_one_todo() throws Exception {
-        Todo todo = new Todo(-1, "Buy milk", false);
+        Todo todo = new Todo(null, "Buy milk", false);
         todoRepository.save(todo);
 
         MockHttpServletRequestBuilder request = get("/todos")
@@ -155,7 +155,7 @@ public class TodoControllerTest {
  */
     @Test
     void should_update_both_fields_when_put_a_todo_with_id_1() throws Exception {
-        Todo todo = new Todo(-1, "Buy milk", false);
+        Todo todo = new Todo(null, "Buy milk", false);
         todoRepository.save(todo);
         String requestBody = """
                 {
@@ -171,9 +171,98 @@ public class TodoControllerTest {
 
         mockMvc.perform(request)
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].text").value("Buy bread"))
                 .andExpect(jsonPath("$[0].done").value(false));
-
     }
+
+    /*Scenario: Ignore surplus id in body
+    Given a todo exists with id "123"
+      And a todo exists with id "456"
+    When a client PUTs to /todos/123 with body:
+      """
+      { "id": "456", ""text": "Buy snacks", "done": true }
+      """
+    Then respond 200 OK
+      And todo with id "123" is updated
+      And todo with id "456" is not updated
+
+     */
+    @Test
+    void should_ignore_surplus_id_in_body_when_put_a_todo_with_id_1() throws Exception {
+        Todo todo1 = new Todo(null, "Buy milk", false);
+        todoRepository.save(todo1);
+        Todo todo2 = new Todo(null, "Buy eggs", false);
+        todoRepository.save(todo2);
+        String requestBody = """
+                {
+                    "id": "2",
+                    "text": "Buy bread",
+                    "done": false
+                }
+                """;
+
+        MockHttpServletRequestBuilder request = put("/todos/"+ 1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody);
+
+        mockMvc.perform(request)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].text").value("Buy bread"))
+                .andExpect(jsonPath("$[0].done").value(false));
+    }
+
+
+    /*
+        Scenario: Reject update for non-existing id
+    Given no todo exists with id "999"
+    When a client PUTs to /todos/999 with body:
+      """
+      { "text": "Buy snacks", "done": true }
+      """
+    Then respond 404 Not Found
+     */
+
+    @Test
+    void should_return_404_when_put_a_todo_with_non_existing_id() throws Exception {
+        String requestBody = """
+                {
+                    "text": "Buy bread",
+                    "done": false
+                }
+                """;
+
+        MockHttpServletRequestBuilder request = put("/todos/"+ 999)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody);
+
+        mockMvc.perform(request)
+                .andExpect(status().isNotFound());
+    }
+
+    /*
+        Scenario: Reject incomplete payload
+    When a client PUTs to /todos/123 with an empty JSON object:
+      """
+      { }
+      """
+    Then respond 422 Unprocessable Entity
+     */
+   @Test
+   void  should_return_422_when_put_a_todo_with_incomplete_payload() throws Exception {
+       Todo todo = new Todo(null, "Buy milk", false);
+       todoRepository.save(todo);
+       String requestBody = """
+                {
+                }
+                """;
+
+       MockHttpServletRequestBuilder request = put("/todos/"+ 1)
+               .contentType(MediaType.APPLICATION_JSON)
+               .content(requestBody);
+
+       mockMvc.perform(request)
+               .andExpect(status().isUnprocessableEntity());
+   }
 }

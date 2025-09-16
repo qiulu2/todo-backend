@@ -13,10 +13,11 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
+@Table
 public class Todo {
 
     @Id
-    private int id;
+    private String id;
 
     private String text;
     private boolean done;
@@ -25,7 +26,7 @@ public class Todo {
 
     }
 
-    public Todo(int id, String text, boolean done) {
+    public Todo(String id, String text, boolean done) {
         this.id = id;
         this.text = text;
         this.done = done;
@@ -38,8 +39,8 @@ public class Todo {
 
     @PrePersist
     public void ensureId() {
-        if (this.id == 0) {
-            this.id = UUID.randomUUID().hashCode();
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
         }
     }
 }
